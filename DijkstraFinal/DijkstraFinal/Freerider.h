@@ -53,7 +53,7 @@ void addInstructions(int path[]);
 
 bool interruption(int carloc[], int interruptloc[]);
 
-char Sendinstruction(int location[], int location2[], int path[], char instruction);
+char Sendinstruction(int location[], int location2[], int path[], struct inst* instruction);
 
 void dijkstra();
 

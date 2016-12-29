@@ -248,7 +248,7 @@ bool interruption(int carloc[], int interruptloc[]) {
 }
 
 
-char Sendinstruction(int location[], int location2[], int path[], char instruction) {
+char Sendinstruction(int location[], int location2[], int path[], struct inst* instruction) {
 	while (1) {
 		char sendinstruction;
 		struct inst temp;
@@ -285,8 +285,8 @@ void dijkstra() {
 					  // sptSet[i] will true if vertex i is included in shortest
 					  // path tree or shortest distance from src to i is finalized                    
 
-	scanf_s("%d %d", &coord[0][0], &coord[0][1]); // start
-	scanf_s("%d %d", &coord[12][0], &coord[12][1]);   //end 
+//	scanf_s("%d %d", &coord[0][0], &coord[0][1]); // start
+//	scanf_s("%d %d", &coord[12][0], &coord[12][1]);   //end 
 
 	startV = closenode(coord[0][0], coord[0][1]);
 	endV = closenode(coord[12][0], coord[12][1]);

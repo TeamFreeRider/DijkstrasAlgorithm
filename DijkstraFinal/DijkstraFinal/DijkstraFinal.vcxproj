@@ -117,9 +117,6 @@
     <ClCompile Include="queue_test.c">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="second.c">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
     <ClCompile Include="server_fisrt.c" />
     <ClCompile Include="server_functions.c" />
     <ClCompile Include="third.c">

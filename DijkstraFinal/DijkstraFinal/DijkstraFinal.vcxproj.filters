@@ -21,9 +21,6 @@
     <ClCompile Include="queue_test.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
-    <ClCompile Include="second.c">
-      <Filter>소스 파일</Filter>
-    </ClCompile>
     <ClCompile Include="third.c">
       <Filter>소스 파일</Filter>
     </ClCompile>

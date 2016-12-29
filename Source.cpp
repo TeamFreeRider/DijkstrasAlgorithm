@@ -100,8 +100,11 @@ void show_route(int v){
 
 int main(){
 	int node_num = 0;
-	printf("Input just one node number : ");
-	scanf("%d", &node_num);
+	printf("Input starting point : ");
+	scanf_s("%d", &node_num);
+
+	/*	printf("Input ending point : ");
+	scanf_s("%d", &node_num);*/
 	
 	shortestpath(node_num, cost, distance, MAX_VERTICES, found);
 	show_route(node_num);

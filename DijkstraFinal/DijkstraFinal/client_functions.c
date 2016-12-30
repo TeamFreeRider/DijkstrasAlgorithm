@@ -253,7 +253,7 @@ bool interruption(int carloc[], int interruptloc[]) {
 	}
 
 }
-void makeNewGraph(bool interruption , int graph[][], int path[]) { 
+void makeNewGraph(bool interruption , int graph[][V], int path[]) { 
 			if (interruption == true) {
 
 				for (u = 0; u < V; u++) {
@@ -278,38 +278,31 @@ char Sendinstruction(int location[], int location2[], int path[], struct inst* i
 	while (1) {
 		char sendinstruction;
 		struct inst temp;
+
+		if (interruption(location, location2) == true) {
+			makeNewGraph(true, graph, path);
+			dijkstra(altgraph, altpath);
+		}
+
 		temp = delQ();
 
 		if (temp.instruction == 'Z') {
 			break;
 		}
-		else if (interruption(location, location2) == true) {
-			makeNewGraph(true, graph, path);
-			dijkstra(altgraph, altpath);
-		}
+
 		else {
-			if (coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y) {
-				if (interruption(location, location2) == true) {
+			if ((coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y)&&(interruption(location, location2) == true) ){
 					path = altpath;
 					for (u = 0; u < V; u++) {
 						for (v = 0; v < V; v++) {
 							graph[u][v] = altgraph[u][v];
 						}
 					}
+					addInstructions(path);
 					break;
-				}
+					
 			}
 				
-			if (coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y) {
-				if (distance(location[0], location[1], temp.pos_x, temp.pos_y) >= ROTATIONDISTANCE)
-					if (interruption(location, location2) == true) {
-						path = altpath;
-						addInstructions(path);
-						break;
-					}
-
-			}
-			
 
 			while (location[0] != temp.pos_x || location[1] != temp.pos_y) {
 				if (distance(location[0], location[1], temp.pos_x, temp.pos_y) < ROTATIONDISTANCE)
@@ -332,7 +325,7 @@ char Sendinstruction(int location[], int location2[], int path[], struct inst* i
 //dijkstra(altgraph, altpath);// 와같이 선언하면 됨 or dijkstra(graph, path);
 
 
-void dijkstra(int editgraph[][], int* editpath) {
+void dijkstra(int editgraph[][V], int* editpath) {
 
 	int  i, sptSet[V], j = 0;
 	//struct inst* instructionset;

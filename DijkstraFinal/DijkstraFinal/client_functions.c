@@ -236,7 +236,6 @@ bool interruption(int carloc[], int interruptloc[]) {
 		if ((path[i] == inter_next1 && path[i + 1] == inter_next2) || (path[i] == inter_next2 && path[i + 1] == inter_next1)) { // 경로 내에 interrupt가 있는 경우. 이 때 path[i]는 interrupt인접노드중 앞쪽, path[i+1]은 뒷
 			if (car_nextorder <= path[i]) { // car이 아직 그 interrupt가 있는 edge를 지나지 않은 경우. return true.
 				interruptedNode = i;
-
 				return true;
 			}
 			else if (car_prevorder >= path[i + 1]) { // car 이미 그 interrupt edge를 지난 경우. interrupt가 있어도 신경안씀 return false.
@@ -244,6 +243,7 @@ bool interruption(int carloc[], int interruptloc[]) {
 			}
 			else if (car_prevorder == path[i] && car_nextorder == path[i + 1]) { // car이 interrupt edge에 있는 경우. path[i+1]과의 distance를 계산하여 car이 더 멀리있다면 아직 interrupt를안지낫으므로 return true.
 				if (distance(coord[path[i + 1]][0], coord[path[i + 1]][1], carloc[0], carloc[1]) > distance(coord[path[i + 1]][0], coord[path[i + 1]][1], interruptloc[0], interruptloc[1])) {
+					interruptedNode = i;
 					return true;
 				}
 				else return false;
@@ -255,7 +255,6 @@ bool interruption(int carloc[], int interruptloc[]) {
 }
 void makeNewGraph(bool interruption , int graph[][V], int path[]) { 
 			if (interruption == true) {
-
 				for (u = 0; u < V; u++) {
 					for (v = 0; v < V; v++) {
 						altgraph[u][v] = graph[u][v];
@@ -266,52 +265,45 @@ void makeNewGraph(bool interruption , int graph[][V], int path[]) {
 				altgraph[interruptedNode + 1][interruptedNode] = 0;
 
 				dijkstra(altgraph, altpath);
-				for (j = 0; j < sizeof(path); j++) {
-					if (altpath[j] = path[j])
+				for (j = 0; j < sizeof(path)/sizeof(int); j++) {
+					if (altpath[j] == path[j])
 						maxnode = j;
 					else
 						break;
 				}
 			}
 }
-char Sendinstruction(int location[], int location2[], int path[], struct inst* instruction) {
+char Sendinstruction(int location[], int location2[], int path[], struct inst* instruction) { // location : car location. location2 : interruption location.( == other car location)
 	while (1) {
 		char sendinstruction;
 		struct inst temp;
 
-		if (interruption(location, location2) == true) {
-			makeNewGraph(true, graph, path);
-			dijkstra(altgraph, altpath);
-		}
-
-		temp = delQ();
-
 		if (temp.instruction == 'Z') {
 			break;
 		}
-
 		else {
-			if ((coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y)&&(interruption(location, location2) == true) ){
-					path = altpath;
-					for (u = 0; u < V; u++) {
-						for (v = 0; v < V; v++) {
-							graph[u][v] = altgraph[u][v];
+			if ((coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y)&&(interruption(location, location2) == true) ){ // path와 altpath가 겹치는 끝부분에 갔을때도 interruption가 존재한다면
+					path = altpath; // path에 altpath를 덮어씌움.
+					for (int u = 0; u < V; u++) {
+						for (int v = 0; v < V; v++) {
+							graph[u][v] = altgraph[u][v]; // 기존 graph도 altgraph로 덮어씌움.
 						}
 					}
-					addInstructions(path);
+					addInstructions(path); // instructionset 재구성
 					break;
-					
 			}
-				
 
-			while (location[0] != temp.pos_x || location[1] != temp.pos_y) {
+			while (location[0] != temp.pos_x || location[1] != temp.pos_y) { // car의 위치가 다음 노드에 도달하지 않았을 때	
 				if (distance(location[0], location[1], temp.pos_x, temp.pos_y) < ROTATIONDISTANCE)
 					sendinstruction = 'F';
-				else
+				else {
+					temp = delQ(); // instruction이 필요할 때 delQ
 					sendinstruction = temp.instruction;
+				}
 				break;
+				
 			}
-			printf("%c at %d, %d \n", temp.instruction, temp.pos_x, temp.pos_y);
+			//printf("%c at %d, %d \n", temp.instruction, temp.pos_x, temp.pos_y);
 		}
 		return sendinstruction;
 	}
@@ -415,7 +407,7 @@ void dijkstra(int editgraph[][V], int* editpath) {
 	}
 	printf("dijkstra is fine\n");
 
-	addInstructions(editpath);
+	//addInstructions(editpath);
 }
 
 
@@ -435,7 +427,7 @@ char FindNearestDijkstra(struct car_info cararray[], int user[]) {
 	for (int i = 0; i<numofcar; i++) {
 		coord[0][0] = cararray[i].pos_x;
 		coord[0][1] = cararray[i].pos_y;
-		dijkstra();
+		dijkstra(graph,path);
 		distance[i] = best[12];
 		if (distance[i] < min) {
 			min = distance[i];

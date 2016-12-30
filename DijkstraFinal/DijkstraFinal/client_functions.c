@@ -9,6 +9,11 @@ struct inst* instructionset;
 
 struct car_info cararray[50];
 int length = 0;
+int maxnode;
+int altpath[V];
+int altgraph[V][V];
+int interruptedNode;
+int u, v, j;
 
 int coord[V][2] =
 { // 42 X 24
@@ -190,52 +195,54 @@ void addInstructions(int path[])
 bool interruption(int carloc[], int interruptloc[]) {
 	struct inst temp;
 
-	int car_next; // 다음에 지나야 할 노드
-	int car_prev;
-	int car_nextorder, car_prevorder;
+	int car_next; // 차가 다음에 지나야 할 노드
+	int car_prev; // 차가 직전에 지난 노드
+	int car_nextorder, car_prevorder; // next or prev 노드의 path array에서의 순서
 
-	int inter_next1, inter_next2;
+	int inter_next1, inter_next2; // interruption 인접 노드 2개. 순서상관 x
 	int i = 0;
 	temp = instructionset[head]; // 다음에 지나야 할 노드의 정보를 담고있는 instructionset
 	for (car_next = 0; car_next < V; car_next++) {
-		if ((temp.pos_x == coord[car_next][0]) && temp.pos_y == coord[car_next][1]) {
+		if ((temp.pos_x == coord[car_next][0]) && temp.pos_y == coord[car_next][1]) { // car_next를 정하는 for 문
 			break;
 		}
 	}
-	car_prev = prevnode[car_next];
+	car_prev = prevnode[car_next]; // 당연히 carnext의 이전 노드
 
-	inter_next1 = closenode(interruptloc[0], interruptloc[1]); // interrupt와 가까운 노드중 하나.
-	for (inter_next2 = 0; inter_next2 < V; inter_next2++) {
+	inter_next1 = closenode(interruptloc[0], interruptloc[1]); // interrupt와 가까운 노드중 하나. closenode를 통해 계산
+	for (inter_next2 = 0; inter_next2 < V; inter_next2++) { // interrupt 인접 노 다른 하나를 구함. graph matrix를 통해 인접노드 중 0이아닌 노드에 대해서 검사.
 		if (!graph[inter_next1][inter_next2]) {
-			if (coord[inter_next2][1] == coord[inter_next1][1]) {
-				if ((coord[inter_next2][0] - interruptloc[0])*(coord[inter_next1][0] - interruptloc[0]) < 0) {
+			if (coord[inter_next2][1] == coord[inter_next1][1]) {//두 노드가 y좌표가 같은 경우
+				if ((coord[inter_next2][0] - interruptloc[0])*(coord[inter_next1][0] - interruptloc[0]) < 0) { //두 노드가x축에서 interruptloc[]을 감싸고 있다면 break;
 					break;
 				}
 			}
-			else if (coord[inter_next2][0] == coord[inter_next1][0]) {
-				if ((coord[inter_next2][1] - interruptloc[1])*(coord[inter_next1][1] - interruptloc[1]) < 0) {
+			else if (coord[inter_next2][0] == coord[inter_next1][0]) { // 두 노드가 x좌표가 같은 경우
+				if ((coord[inter_next2][1] - interruptloc[1])*(coord[inter_next1][1] - interruptloc[1]) < 0) { // 두 노드가 y 축에서 interruptloc을 감싸고 있다면 break/
 					break;
 				}
 			}
 		}
 	}
-	for (i = 0; i < length; i++) {
+	for (i = 0; i < length; i++) {// car nextorder 계산.
 		if (path[i] == car_next) {
 			break;
 		}
 	}
 	car_nextorder = i;
-	car_prevorder = car_nextorder - 1;
+	car_prevorder = car_nextorder - 1; // 당연
 
 	for (i = 0; i < length - 1; i++) {
-		if ((path[i] == inter_next1 && path[i + 1] == inter_next2) || (path[i] == inter_next2 && path[i + 1] == inter_next1)) {
-			if (car_nextorder <= path[i]) {
+		if ((path[i] == inter_next1 && path[i + 1] == inter_next2) || (path[i] == inter_next2 && path[i + 1] == inter_next1)) { // 경로 내에 interrupt가 있는 경우. 이 때 path[i]는 interrupt인접노드중 앞쪽, path[i+1]은 뒷
+			if (car_nextorder <= path[i]) { // car이 아직 그 interrupt가 있는 edge를 지나지 않은 경우. return true.
+				interruptedNode = i;
+
 				return true;
 			}
-			else if (car_prevorder >= path[i + 1]) {
+			else if (car_prevorder >= path[i + 1]) { // car 이미 그 interrupt edge를 지난 경우. interrupt가 있어도 신경안씀 return false.
 				return false;
 			}
-			else if (car_prevorder == path[i] && car_nextorder == path[i + 1]) {
+			else if (car_prevorder == path[i] && car_nextorder == path[i + 1]) { // car이 interrupt edge에 있는 경우. path[i+1]과의 distance를 계산하여 car이 더 멀리있다면 아직 interrupt를안지낫으므로 return true.
 				if (distance(coord[path[i + 1]][0], coord[path[i + 1]][1], carloc[0], carloc[1]) > distance(coord[path[i + 1]][0], coord[path[i + 1]][1], interruptloc[0], interruptloc[1])) {
 					return true;
 				}
@@ -246,8 +253,27 @@ bool interruption(int carloc[], int interruptloc[]) {
 	}
 
 }
+void makeNewGraph(bool interruption , int graph[][], int path[]) { 
+			if (interruption == true) {
 
+				for (u = 0; u < V; u++) {
+					for (v = 0; v < V; v++) {
+						altgraph[u][v] = graph[u][v];
+					}
+				}
 
+				altgraph[interruptedNode][interruptedNode + 1] = 0;
+				altgraph[interruptedNode + 1][interruptedNode] = 0;
+
+				dijkstra(altgraph, altpath);
+				for (j = 0; j < sizeof(path); j++) {
+					if (altpath[j] = path[j])
+						maxnode = j;
+					else
+						break;
+				}
+			}
+}
 char Sendinstruction(int location[], int location2[], int path[], struct inst* instruction) {
 	while (1) {
 		char sendinstruction;
@@ -258,9 +284,33 @@ char Sendinstruction(int location[], int location2[], int path[], struct inst* i
 			break;
 		}
 		else if (interruption(location, location2) == true) {
-			break;
+			makeNewGraph(true, graph, path);
+			dijkstra(altgraph, altpath);
 		}
 		else {
+			if (coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y) {
+				if (interruption(location, location2) == true) {
+					path = altpath;
+					for (u = 0; u < V; u++) {
+						for (v = 0; v < V; v++) {
+							graph[u][v] = altgraph[u][v];
+						}
+					}
+					break;
+				}
+			}
+				
+			if (coord[maxnode][0] == temp.pos_x && coord[maxnode][1] == temp.pos_y) {
+				if (distance(location[0], location[1], temp.pos_x, temp.pos_y) >= ROTATIONDISTANCE)
+					if (interruption(location, location2) == true) {
+						path = altpath;
+						addInstructions(path);
+						break;
+					}
+
+			}
+			
+
 			while (location[0] != temp.pos_x || location[1] != temp.pos_y) {
 				if (distance(location[0], location[1], temp.pos_x, temp.pos_y) < ROTATIONDISTANCE)
 					sendinstruction = 'F';
@@ -277,7 +327,13 @@ char Sendinstruction(int location[], int location2[], int path[], struct inst* i
 
 
 
-void dijkstra() {
+//int graph[V][V];
+//int altpath[V]; 이렇게 주어졌을 때( graph와 path는 전역변수로 선언)
+//dijkstra(altgraph, altpath);// 와같이 선언하면 됨 or dijkstra(graph, path);
+
+
+void dijkstra(int editgraph[][], int* editpath) {
+
 	int  i, sptSet[V], j = 0;
 	//struct inst* instructionset;
 	//instructionset = (struct inst*)malloc(sizeof(struct inst)*V);
@@ -285,18 +341,18 @@ void dijkstra() {
 					  // sptSet[i] will true if vertex i is included in shortest
 					  // path tree or shortest distance from src to i is finalized                    
 
-//	scanf_s("%d %d", &coord[0][0], &coord[0][1]); // start
-//	scanf_s("%d %d", &coord[12][0], &coord[12][1]);   //end 
+					  //  scanf_s("%d %d", &coord[0][0], &coord[0][1]); // start
+					  //  scanf_s("%d %d", &coord[12][0], &coord[12][1]);   //end 
 
 	startV = closenode(coord[0][0], coord[0][1]);
 	endV = closenode(coord[12][0], coord[12][1]);
 	printf("%d %d\n", startV, endV);
-	graph[0][startV] = 1; // source와 그 인접노드 간 weight
-	graph[endV][12] = 1; //destination과 인접노드간 weight
-						 // starting vertex. 0에서 startV로 무조건 이동
-						 // 12번 node(destination)에서 ending vertex으로 무조건 이동
+	editgraph[0][startV] = 1; // source와 그 인접노드 간 weight
+	editgraph[endV][12] = 1; //destination과 인접노드간 weight
+							 // starting vertex. 0에서 startV로 무조건 이동
+							 // 12번 node(destination)에서 ending vertex으로 무조건 이동
 	for (i = 0; i < V; i++)
-		best[i] = 99999, sptSet[i] = 0, inversepath[i] = -1, path[i] = -1;
+		best[i] = 99999, sptSet[i] = 0, inversepath[i] = -1, editpath[i] = -1;
 
 
 	best[0] = 0;
@@ -304,7 +360,7 @@ void dijkstra() {
 
 	for (i = 0; i < V; i++) {
 		for (int j = 0; j < V; j++) {
-			printf("%2d  ", graph[i][j]);
+			printf("%2d  ", editgraph[i][j]);
 		}
 		printf("\n");
 	}
@@ -316,8 +372,8 @@ void dijkstra() {
 
 
 		for (int v = 0; v < V; v++) {
-			if (!sptSet[v] && graph[u][v] && best[u] + graph[u][v] < best[v]) {
-				best[v] = best[u] + graph[u][v];
+			if (!sptSet[v] && editgraph[u][v] && best[u] + editgraph[u][v] < best[v]) {
+				best[v] = best[u] + editgraph[u][v];
 				prevnode[v] = u;
 			}
 		}
@@ -340,34 +396,39 @@ void dijkstra() {
 	} // j : length of path.
 	length = j;
 	for (i = 0; i < length; i++) {
-		path[i] = inversepath[length - i - 1];
+		editpath[i] = inversepath[length - i - 1];
 
 	}
 	//if soruce node is in the middle of the StartV and the second node of the path 
-	if ((coord[path[1]][0] - coord[0][0])*(coord[path[2]][0] - coord[0][0])<0 || (coord[path[1]][1] - coord[0][1])*(coord[path[2]][1] - coord[0][1])<0) {
+	if ((coord[editpath[1]][0] - coord[0][0])*(coord[editpath[2]][0] - coord[0][0])<0 || (coord[editpath[1]][1] - coord[0][1])*(coord[editpath[2]][1] - coord[0][1])<0) {
 		for (i = 1; i < length - 1; i++) {
-			path[i] = path[i + 1];
+			editpath[i] = editpath[i + 1];
 		}
 		length--;
-		path[length] = -1;
+		editpath[length] = -1;
 	}
 
 	//if destination node is in the middle of EndV and the last to second node of the path
 	if ((coord[prevnode[12]][0] - coord[12][0])*(coord[prevnode[prevnode[12]]][0] - coord[12][0])<0 || (coord[prevnode[12]][1] - coord[12][1])*(coord[prevnode[prevnode[12]]][1] - coord[12][1])<0) {
-		path[length - 2] = path[length - 1];
-		path[length - 1] = -1;
+		editpath[length - 2] = editpath[length - 1];
+		editpath[length - 1] = -1;
 		length--;
 	}
 
 	for (i = 0; i < length; i++) {
 		if (i == length - 1)
-			printf("%d\n", path[i]);
-		else printf("%d->", path[i]);
+			printf("%d\n", editpath[i]);
+		else printf("%d->", editpath[i]);
 	}
 	printf("dijkstra is fine\n");
 
-	addInstructions(path);
+	addInstructions(editpath);
 }
+
+
+
+
+
 
 
 char FindNearestDijkstra(struct car_info cararray[], int user[]) {

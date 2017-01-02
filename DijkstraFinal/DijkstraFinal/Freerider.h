@@ -12,7 +12,7 @@ typedef enum { false, true } bool;
 #define ROTATIONDISTANCE 5
 
 
-extern int path[V], altpath[V], inversepath[V], prevnode[V];
+extern int path[V], inversepath[V], prevnode[V];
 extern double best[V];
 extern int length;
 struct car_info {
@@ -28,7 +28,7 @@ extern int coord[V][2];
 // 4    5    6   
 // 0    1    2    3
 
-extern int graph[V][V], altgraph[V][V];
+extern int graph[V][V];
 
 int closenode(int x, int y);
 double distance(int x1, int y1, int x2, int y2);
@@ -55,8 +55,8 @@ bool interruption(int carloc[], int interruptloc[]);
 
 char Sendinstruction(int location[], int location2[], int path[], struct inst* instruction);
 
-void dijkstra(int editgraph[][V], int* editpath);
-void makeNewGraph(bool interruption, int graph[][V], int path[]);
+void dijkstra();
+
 extern struct car_info cararray[50];
 extern int numofcar;// 임의지정
 

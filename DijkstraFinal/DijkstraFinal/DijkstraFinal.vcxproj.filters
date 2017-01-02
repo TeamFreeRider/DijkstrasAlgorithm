@@ -33,6 +33,9 @@
     <ClCompile Include="server_functions.c">
       <Filter>소스 파일</Filter>
     </ClCompile>
+    <ClCompile Include="makeNewgraph.c">
+      <Filter>소스 파일</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Freerider.h">
